@@ -1,0 +1,27 @@
+### Health Check
+GET http://localhost:8080/health
+
+### List Categories
+GET http://localhost:8080/api/categories
+
+### Create Order
+POST http://localhost:8080/api/orders
+Content-Type: application/json
+
+{
+  "name": "John Doe",
+  "email": "john.doe3@example.com",
+  "phone": "+6281234567890",
+  "category_id": 1
+}
+
+### Payment Callback
+POST http://localhost:8080/api/payments/callback
+Content-Type: application/json
+
+{
+  "external_id": "01JS4ME2FV07JKZZDBJ2F66Z2D"
+}
+
+### Trigger Orders Cancel
+POST http://localhost:8080/api/orders/cancel

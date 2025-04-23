@@ -1,0 +1,1 @@
+mockgen -package=mocks -destination=common/jetstream/mocks/mock_jetstream_publisher.go github.com/nats-io/nats.go/jetstream Publisher

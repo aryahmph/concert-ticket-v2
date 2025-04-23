@@ -1,0 +1,5 @@
+coverage.html
+coverage.out
+*.prof
+main
+go.sum
