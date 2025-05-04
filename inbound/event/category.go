@@ -28,7 +28,7 @@ func (in CategoryEvent) BulkIncrementCategoryQuantityHandler(ctx context.Context
 		return nil
 	}
 
-	ctx, span := otel.Tracer.Start(ctx, "inbound.order.event.bulkIncrementCategoryQuantity")
+	ctx, span := otel.Tracer.Start(ctx, "CategoryEvent.BulkIncrementCategoryQuantityHandler")
 	defer span.End()
 
 	traceIdAttr := common.ExtractTraceIDFromCtx(ctx)

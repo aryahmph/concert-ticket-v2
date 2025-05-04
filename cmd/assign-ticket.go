@@ -3,15 +3,25 @@ package cmd
 import (
 	"concert-ticket/common/constant"
 	"concert-ticket/inbound/event"
-	emailOutbound "concert-ticket/outbound/email"
+	"concert-ticket/outbound/sqlgen"
 	"context"
 	"github.com/nats-io/nats.go/jetstream"
+	"golang.org/x/text/language"
+	"golang.org/x/text/message"
 	"log"
 	"log/slog"
 )
 
-func runQueueEmailCmd(ctx context.Context) {
+func runQueueAssignTicketCmd(ctx context.Context) {
 	cfg := newCfg("env")
+
+	db := newDb(cfg)
+	defer db.Close()
+
+	querier := sqlgen.New(db)
+
+	cacheClient := newRedis(cfg)
+	defer cacheClient.Close()
 
 	natsConn := newNats(cfg)
 	defer natsConn.Close()
@@ -24,25 +34,25 @@ func runQueueEmailCmd(ctx context.Context) {
 		log.Fatalln("failed to get stream", err)
 	}
 
-	outbound := emailOutbound.EmailOutbound{Cfg: cfg}
-	outbound.Init()
-
-	emailEvent := event.EmailEvent{
-		EmailOutbound: outbound,
-		Timeout:       cfg.GetDuration("queue.email.timeout"),
+	orderEvent := event.OrderEvent{
+		Db:                   db,
+		Querier:              querier,
+		Publisher:            js,
+		IdrCurrencyFormatter: message.NewPrinter(language.Indonesian),
+		Timeout:              cfg.GetDuration("queue.order.timeout"),
 	}
 
 	cons, err := st.CreateOrUpdateConsumer(ctx, jetstream.ConsumerConfig{
-		Durable:       "consumer:email",
-		FilterSubject: constant.EmailWildcard,
-		MaxDeliver:    cfg.GetInt("queue.email.max_deliver"),
-		AckWait:       cfg.GetDuration("queue.email.ack_wait"),
+		Durable:       "consumer:assign-ticket",
+		FilterSubject: constant.SubjectAssignOrderTicketRowCol,
+		MaxDeliver:    cfg.GetInt("queue.order.max_deliver"),
+		AckWait:       cfg.GetDuration("queue.order.ack_wait"),
 	})
 	if err != nil {
 		log.Fatalln("failed to create consumer", err)
 	}
 
-	iter, err := cons.Messages()
+	iter, err := cons.Messages(jetstream.PullMaxMessages(cfg.GetInt("queue.order.batch_size")), jetstream.PullExpiry(cfg.GetDuration("queue.order.batch_wait")))
 	if err != nil {
 		panic(err)
 	}
@@ -65,8 +75,8 @@ func runQueueEmailCmd(ctx context.Context) {
 
 				var eventErr error
 				switch msg.Subject() {
-				case constant.SubjectSendEmail:
-					eventErr = emailEvent.SendEmailHandler(ctx, msg.Data())
+				case constant.SubjectAssignOrderTicketRowCol:
+					eventErr = orderEvent.AssignTicketColHandler(ctx, msg.Data())
 				}
 
 				if eventErr != nil {
@@ -86,11 +96,11 @@ func runQueueEmailCmd(ctx context.Context) {
 		}
 	}()
 
-	slog.InfoContext(ctx, "email queue consumer started")
+	slog.InfoContext(ctx, "order queue consumer started")
 
 	<-ctx.Done()
 
 	iter.Stop()
 
-	slog.InfoContext(ctx, "email queue consumer stopped")
+	slog.InfoContext(ctx, "order queue consumer stopped")
 }

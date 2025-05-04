@@ -10,8 +10,8 @@ VALUES (1, 'Ultimate Experience', 11000000, 500, 50, 10),
        (9, 'Festival', 2500000, 15000, 150, 100);
 
 INSERT INTO category_quantities (category_id, row, col)
-SELECT c.id      AS category_id,
-       row_num   AS row,
-       c.max_col AS col
+SELECT c.id          AS category_id,
+       row_num       AS row,
+       c.max_col + 1 AS col
 FROM categories c,
      GENERATE_SERIES(1, c.max_row + 1) AS row_num;

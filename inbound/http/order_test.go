@@ -94,28 +94,21 @@ func (s *OrderHttpTestSuite) TestCreate() {
 		},
 		{
 			name:           "validation error - invalid category #1",
-			reqBody:        `{"name": "John Doe", "email": "john@example.com", "phone": "+6281234567890"}`,
+			reqBody:        `{"name": "John Doe", "email": "john@example.com"}`,
 			setupMock:      func() {},
 			expectedStatus: http.StatusBadRequest,
 			expectedBody:   `{"error":"Validation failed","data":{"CategoryId":"required"}}`,
 		},
 		{
 			name:           "validation error - invalid category #2",
-			reqBody:        `{"category_id": 99, "name": "John Doe", "email": "john@example.com", "phone": "+6281234567890"}`,
+			reqBody:        `{"category_id": 99, "name": "John Doe", "email": "john@example.com"}`,
 			setupMock:      func() {},
 			expectedStatus: http.StatusBadRequest,
 			expectedBody:   `{"error":"Validation failed","data":{"CategoryId":"not found"}}`,
 		},
 		{
-			name:           "validation error - invalid phone",
-			reqBody:        `{"category_id": 1, "name": "John Doe", "email": "john@example.com", "phone": "invalid"}`,
-			setupMock:      func() {},
-			expectedStatus: http.StatusBadRequest,
-			expectedBody:   `{"error":"Validation failed","data":{"Phone":"not valid"}}`,
-		},
-		{
 			name:    "email lock error",
-			reqBody: `{"category_id": 1, "name": "John Doe", "email": "john@example.com", "phone": "+6281234567890"}`,
+			reqBody: `{"category_id": 1, "name": "John Doe", "email": "john@example.com"}`,
 			setupMock: func() {
 				s.CacheMock.ExpectSetNX(fmt.Sprintf(constant.OrderEmailLock, "john@example.com"), true, constant.OrderEmailLockDefaultTTL).
 					SetErr(redis.ErrClosed)
@@ -125,7 +118,7 @@ func (s *OrderHttpTestSuite) TestCreate() {
 		},
 		{
 			name:    "email already ordered - from cache",
-			reqBody: `{"category_id": 1, "name": "John Doe", "email": "john@example.com", "phone": "+6281234567890"}`,
+			reqBody: `{"category_id": 1, "name": "John Doe", "email": "john@example.com"}`,
 			setupMock: func() {
 				s.CacheMock.ExpectSetNX(fmt.Sprintf(constant.OrderEmailLock, "john@example.com"), true, constant.OrderEmailLockDefaultTTL).
 					SetVal(false)
@@ -135,7 +128,7 @@ func (s *OrderHttpTestSuite) TestCreate() {
 		},
 		{
 			name:    "check email from db error",
-			reqBody: `{"category_id": 1, "name": "John Doe", "email": "john@example.com", "phone": "+6281234567890"}`,
+			reqBody: `{"category_id": 1, "name": "John Doe", "email": "john@example.com"}`,
 			setupMock: func() {
 				s.CacheMock.ExpectSetNX(fmt.Sprintf(constant.OrderEmailLock, "john@example.com"), true, constant.OrderEmailLockDefaultTTL).
 					SetVal(true)
@@ -148,7 +141,7 @@ func (s *OrderHttpTestSuite) TestCreate() {
 		},
 		{
 			name:    "check email already ordered",
-			reqBody: `{"category_id": 1, "name": "John Doe", "email": "john@example.com", "phone": "+6281234567890"}`,
+			reqBody: `{"category_id": 1, "name": "John Doe", "email": "john@example.com"}`,
 			setupMock: func() {
 				s.CacheMock.ExpectSetNX(fmt.Sprintf(constant.OrderEmailLock, "john@example.com"), true, constant.OrderEmailLockDefaultTTL).
 					SetVal(true)
@@ -161,7 +154,7 @@ func (s *OrderHttpTestSuite) TestCreate() {
 		},
 		{
 			name:    "decrement category error",
-			reqBody: `{"category_id": 1, "name": "John Doe", "email": "john@example.com", "phone": "+6281234567890"}`,
+			reqBody: `{"category_id": 1, "name": "John Doe", "email": "john@example.com"}`,
 			setupMock: func() {
 				s.CacheMock.ExpectSetNX(fmt.Sprintf(constant.OrderEmailLock, "john@example.com"), true, constant.OrderEmailLockDefaultTTL).
 					SetVal(true)
@@ -176,7 +169,7 @@ func (s *OrderHttpTestSuite) TestCreate() {
 		},
 		{
 			name:    "increment category error",
-			reqBody: `{"category_id": 1, "name": "John Doe", "email": "john@example.com", "phone": "+6281234567890"}`,
+			reqBody: `{"category_id": 1, "name": "John Doe", "email": "john@example.com"}`,
 			setupMock: func() {
 				s.CacheMock.ExpectSetNX(fmt.Sprintf(constant.OrderEmailLock, "john@example.com"), true, constant.OrderEmailLockDefaultTTL).
 					SetVal(true)
@@ -193,7 +186,7 @@ func (s *OrderHttpTestSuite) TestCreate() {
 		},
 		{
 			name:    "category sold out",
-			reqBody: `{"category_id": 1, "name": "John Doe", "email": "john@example.com", "phone": "+6281234567890"}`,
+			reqBody: `{"category_id": 1, "name": "John Doe", "email": "john@example.com"}`,
 			setupMock: func() {
 				s.CacheMock.ExpectSetNX(fmt.Sprintf(constant.OrderEmailLock, "john@example.com"), true, constant.OrderEmailLockDefaultTTL).
 					SetVal(true)
@@ -210,7 +203,7 @@ func (s *OrderHttpTestSuite) TestCreate() {
 		},
 		{
 			name:    "publish message error - increment category",
-			reqBody: `{"category_id": 1, "name": "John Doe", "email": "john@example.com", "phone": "+6281234567890"}`,
+			reqBody: `{"category_id": 1, "name": "John Doe", "email": "john@example.com"}`,
 			setupMock: func() {
 				s.CacheMock.ExpectSetNX(fmt.Sprintf(constant.OrderEmailLock, "john@example.com"), true, constant.OrderEmailLockDefaultTTL).
 					SetVal(true)
@@ -231,7 +224,7 @@ func (s *OrderHttpTestSuite) TestCreate() {
 		},
 		{
 			name:    "create order error",
-			reqBody: `{"category_id": 1, "name": "John Doe", "email": "john@example.com", "phone": "+6281234567890"}`,
+			reqBody: `{"category_id": 1, "name": "John Doe", "email": "john@example.com"}`,
 			setupMock: func() {
 				s.CacheMock.ExpectSetNX(fmt.Sprintf(constant.OrderEmailLock, "john@example.com"), true, constant.OrderEmailLockDefaultTTL).
 					SetVal(true)
@@ -250,7 +243,6 @@ func (s *OrderHttpTestSuite) TestCreate() {
 						pgxmock.AnyArg(),   // external_id
 						"John Doe",         // name
 						"john@example.com", // email
-						"+6281234567890",   // phone
 						pgxmock.AnyArg(),   // payment_code
 						pgtype.Timestamp{Time: expiredAt, Valid: true}, // expired_at with fixed time
 					).
@@ -270,7 +262,7 @@ func (s *OrderHttpTestSuite) TestCreate() {
 		},
 		{
 			name:    "publish message error - create order",
-			reqBody: `{"category_id": 1, "name": "John Doe", "email": "john@example.com", "phone": "+6281234567890"}`,
+			reqBody: `{"category_id": 1, "name": "John Doe", "email": "john@example.com"}`,
 			setupMock: func() {
 				s.CacheMock.ExpectSetNX(fmt.Sprintf(constant.OrderEmailLock, "john@example.com"), true, constant.OrderEmailLockDefaultTTL).
 					SetVal(true)
@@ -289,7 +281,6 @@ func (s *OrderHttpTestSuite) TestCreate() {
 						pgxmock.AnyArg(),   // external_id
 						"John Doe",         // name
 						"john@example.com", // email
-						"+6281234567890",   // phone
 						pgxmock.AnyArg(),   // payment_code
 						pgtype.Timestamp{Time: expiredAt, Valid: true}, // expired_at
 					).
@@ -315,7 +306,7 @@ func (s *OrderHttpTestSuite) TestCreate() {
 		},
 		{
 			name:    "success",
-			reqBody: `{"category_id": 1, "name": "John Doe", "email": "john@example.com", "phone": "+6281234567890"}`,
+			reqBody: `{"category_id": 1, "name": "John Doe", "email": "john@example.com"}`,
 			setupMock: func() {
 				s.CacheMock.ExpectSetNX(fmt.Sprintf(constant.OrderEmailLock, "john@example.com"), true, constant.OrderEmailLockDefaultTTL).
 					SetVal(true)
@@ -334,7 +325,6 @@ func (s *OrderHttpTestSuite) TestCreate() {
 						pgxmock.AnyArg(),   // external_id
 						"John Doe",         // name
 						"john@example.com", // email
-						"+6281234567890",   // phone
 						pgxmock.AnyArg(),   // payment_code
 						pgtype.Timestamp{Time: expiredAt, Valid: true}, // expired_at
 					).
@@ -401,53 +391,63 @@ func (s *OrderHttpTestSuite) TestCreate() {
 func (s *OrderHttpTestSuite) TestCancel() {
 	tests := []struct {
 		name           string
-		setupMock      func()
+		setupMock      func(time.Time)
 		expectedStatus int
 		expectedBody   string
+		timeNow        func() time.Time
 	}{
 		{
 			name: "database error",
-			setupMock: func() {
-				s.PgxMock.ExpectQuery(`UPDATE orders SET status = 'cancelled', updated_at = NOW\(\) WHERE id IN \(SELECT id FROM orders WHERE status = 'pending' AND expired_at < NOW\(\) LIMIT \$1\) RETURNING id, category_id, name, email`).
-					WithArgs(int32(10)).
+			setupMock: func(fixedTime time.Time) {
+				s.PgxMock.ExpectQuery(`UPDATE orders SET status = 'cancelled', updated_at = \$2 WHERE id IN \(SELECT id FROM orders WHERE status = 'pending' AND expired_at < \$2 LIMIT \$1\) RETURNING id, category_id, name, email`).
+					WithArgs(int32(10), pgtype.Timestamp{Time: fixedTime, Valid: true}).
 					WillReturnError(fmt.Errorf("database error"))
 			},
 			expectedStatus: http.StatusInternalServerError,
 			expectedBody:   `{"error":"Internal Server Error"}`,
+			timeNow: func() time.Time {
+				return time.Date(2023, 1, 1, 0, 0, 0, 0, time.UTC)
+			},
 		},
 		{
 			name: "no cancelable orders",
-			setupMock: func() {
-				s.PgxMock.ExpectQuery(`UPDATE orders SET status = 'cancelled', updated_at = NOW\(\) WHERE id IN \(SELECT id FROM orders WHERE status = 'pending' AND expired_at < NOW\(\) LIMIT \$1\) RETURNING id, category_id, name, email`).
-					WithArgs(int32(10)).
+			setupMock: func(fixedTime time.Time) {
+				s.PgxMock.ExpectQuery(`UPDATE orders SET status = 'cancelled', updated_at = \$2 WHERE id IN \(SELECT id FROM orders WHERE status = 'pending' AND expired_at < \$2 LIMIT \$1\) RETURNING id, category_id, name, email`).
+					WithArgs(int32(10), pgtype.Timestamp{Time: fixedTime, Valid: true}).
 					WillReturnRows(pgxmock.NewRows([]string{"id", "category_id", "name", "email"}))
 			},
 			expectedStatus: http.StatusOK,
 			expectedBody:   ``,
+			timeNow: func() time.Time {
+				return time.Date(2023, 1, 1, 0, 0, 0, 0, time.UTC)
+			},
 		},
 		{
 			name: "redis incrby error",
-			setupMock: func() {
+			setupMock: func(fixedTime time.Time) {
 				rows := pgxmock.NewRows([]string{"id", "category_id", "name", "email"}).
 					AddRow(int32(1), int16(1), "John Doe", "john@example.com")
 
-				s.PgxMock.ExpectQuery(`UPDATE orders SET status = 'cancelled', updated_at = NOW\(\) WHERE id IN \(SELECT id FROM orders WHERE status = 'pending' AND expired_at < NOW\(\) LIMIT \$1\) RETURNING id, category_id, name, email`).
-					WithArgs(int32(10)).
+				s.PgxMock.ExpectQuery(`UPDATE orders SET status = 'cancelled', updated_at = \$2 WHERE id IN \(SELECT id FROM orders WHERE status = 'pending' AND expired_at < \$2 LIMIT \$1\) RETURNING id, category_id, name, email`).
+					WithArgs(int32(10), pgtype.Timestamp{Time: fixedTime, Valid: true}).
 					WillReturnRows(rows)
 
 				s.CacheMock.ExpectIncrBy(fmt.Sprintf(constant.EachCategoryQuantityKey, int16(1)), int64(1)).SetErr(redis.ErrClosed)
 			},
 			expectedStatus: http.StatusInternalServerError,
 			expectedBody:   `{"error":"Internal Server Error"}`,
+			timeNow: func() time.Time {
+				return time.Date(2023, 1, 1, 0, 0, 0, 0, time.UTC)
+			},
 		},
 		{
 			name: "publish increment category error",
-			setupMock: func() {
+			setupMock: func(fixedTime time.Time) {
 				rows := pgxmock.NewRows([]string{"id", "category_id", "name", "email"}).
 					AddRow(int32(1), int16(1), "John Doe", "john@example.com")
 
-				s.PgxMock.ExpectQuery(`UPDATE orders SET status = 'cancelled', updated_at = NOW\(\) WHERE id IN \(SELECT id FROM orders WHERE status = 'pending' AND expired_at < NOW\(\) LIMIT \$1\) RETURNING id, category_id, name, email`).
-					WithArgs(int32(10)).
+				s.PgxMock.ExpectQuery(`UPDATE orders SET status = 'cancelled', updated_at = \$2 WHERE id IN \(SELECT id FROM orders WHERE status = 'pending' AND expired_at < \$2 LIMIT \$1\) RETURNING id, category_id, name, email`).
+					WithArgs(int32(10), pgtype.Timestamp{Time: fixedTime, Valid: true}).
 					WillReturnRows(rows)
 
 				s.CacheMock.ExpectIncrBy(fmt.Sprintf(constant.EachCategoryQuantityKey, int16(1)), int64(1)).SetVal(1)
@@ -460,15 +460,18 @@ func (s *OrderHttpTestSuite) TestCancel() {
 			},
 			expectedStatus: http.StatusInternalServerError,
 			expectedBody:   `{"error":"Internal Server Error"}`,
+			timeNow: func() time.Time {
+				return time.Date(2023, 1, 1, 0, 0, 0, 0, time.UTC)
+			},
 		},
 		{
 			name: "publish email error",
-			setupMock: func() {
+			setupMock: func(fixedTime time.Time) {
 				rows := pgxmock.NewRows([]string{"id", "category_id", "name", "email"}).
 					AddRow(int32(1), int16(1), "John Doe", "john@example.com")
 
-				s.PgxMock.ExpectQuery(`UPDATE orders SET status = 'cancelled', updated_at = NOW\(\) WHERE id IN \(SELECT id FROM orders WHERE status = 'pending' AND expired_at < NOW\(\) LIMIT \$1\) RETURNING id, category_id, name, email`).
-					WithArgs(int32(10)).
+				s.PgxMock.ExpectQuery(`UPDATE orders SET status = 'cancelled', updated_at = \$2 WHERE id IN \(SELECT id FROM orders WHERE status = 'pending' AND expired_at < \$2 LIMIT \$1\) RETURNING id, category_id, name, email`).
+					WithArgs(int32(10), pgtype.Timestamp{Time: fixedTime, Valid: true}).
 					WillReturnRows(rows)
 
 				s.CacheMock.ExpectIncrBy(fmt.Sprintf(constant.EachCategoryQuantityKey, int16(1)), int64(1)).SetVal(1)
@@ -487,27 +490,28 @@ func (s *OrderHttpTestSuite) TestCancel() {
 			},
 			expectedStatus: http.StatusInternalServerError,
 			expectedBody:   `{"error":"Internal Server Error"}`,
+			timeNow: func() time.Time {
+				return time.Date(2023, 1, 1, 0, 0, 0, 0, time.UTC)
+			},
 		},
 		{
 			name: "success",
-			setupMock: func() {
+			setupMock: func(fixedTime time.Time) {
 				rows := pgxmock.NewRows([]string{"id", "category_id", "name", "email"}).
 					AddRow(int32(1), int16(1), "John Doe", "john@example.com")
 
-				s.PgxMock.ExpectQuery(`UPDATE orders SET status = 'cancelled', updated_at = NOW\(\) WHERE id IN \(SELECT id FROM orders WHERE status = 'pending' AND expired_at < NOW\(\) LIMIT \$1\) RETURNING id, category_id, name, email`).
-					WithArgs(int32(10)).
+				s.PgxMock.ExpectQuery(`UPDATE orders SET status = 'cancelled', updated_at = \$2 WHERE id IN \(SELECT id FROM orders WHERE status = 'pending' AND expired_at < \$2 LIMIT \$1\) RETURNING id, category_id, name, email`).
+					WithArgs(int32(10), pgtype.Timestamp{Time: fixedTime, Valid: true}).
 					WillReturnRows(rows)
 
 				s.CacheMock.ExpectIncrBy(fmt.Sprintf(constant.EachCategoryQuantityKey, int16(1)), int64(1)).SetVal(1)
 
-				// Expect successful category increment publishes
 				s.Publisher.EXPECT().Publish(
 					gomock.Any(),
 					constant.SubjectBulkIncrementCategoryQuantity,
 					gomock.Any(),
 				).Return(nil, nil)
 
-				// Expect successful email publishes
 				s.Publisher.EXPECT().Publish(
 					gomock.Any(),
 					constant.SubjectSendEmail,
@@ -516,6 +520,9 @@ func (s *OrderHttpTestSuite) TestCancel() {
 			},
 			expectedStatus: http.StatusOK,
 			expectedBody:   ``,
+			timeNow: func() time.Time {
+				return time.Date(2023, 1, 1, 0, 0, 0, 0, time.UTC)
+			},
 		},
 	}
 
@@ -531,7 +538,12 @@ func (s *OrderHttpTestSuite) TestCancel() {
 				message.NewPrinter(language.Indonesian),
 			)
 
-			tc.setupMock()
+			if tc.timeNow != nil {
+				orderHttp.TimeNow = tc.timeNow
+			}
+
+			fixedTime := time.Date(2023, 1, 1, 0, 0, 0, 0, time.UTC)
+			tc.setupMock(fixedTime)
 
 			req := httptest.NewRequest(http.MethodPost, "/api/orders/cancel", nil)
 			w := httptest.NewRecorder()

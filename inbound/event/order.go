@@ -142,7 +142,7 @@ func (in OrderEvent) AssignTicketColHandler(ctx context.Context, msg []byte) err
 		return nil
 	}
 
-	ctx, span := otel.Tracer.Start(ctx, "inbound.order.event.assignTicketCol")
+	ctx, span := otel.Tracer.Start(ctx, "OrderEvent.AssignTicketColHandler")
 	defer span.End()
 
 	traceIdAttr := common.ExtractTraceIDFromCtx(ctx)
@@ -170,16 +170,16 @@ func (in OrderEvent) AssignTicketColHandler(ctx context.Context, msg []byte) err
 	}
 
 	if decrementedTicket.Row == 0 {
-		slog.WarnContext(ctx, "category quantity row col is 0", traceIdAttr)
-		return nil
+		slog.ErrorContext(ctx, "category quantity row is 0", traceIdAttr)
+		return fmt.Errorf("category quantity row is 0")
 	}
 
-	if decrementedTicket.Col < 0 {
-		slog.WarnContext(ctx, "category quantity col is 0", traceIdAttr)
-		return nil
+	if decrementedTicket.Col < 1 {
+		slog.ErrorContext(ctx, "category quantity col is 0", traceIdAttr)
+		return fmt.Errorf("category quantity col is 0")
 	}
 
-	_, err = withTx.UpdateOrderTicketRowCol(ctx, sqlgen.UpdateOrderTicketRowColParams{
+	cmd, err := withTx.UpdateOrderTicketRowCol(ctx, sqlgen.UpdateOrderTicketRowColParams{
 		ID:        req.ID,
 		TicketRow: pgtype.Int4{Int32: decrementedTicket.Row, Valid: true},
 		TicketCol: pgtype.Int4{Int32: decrementedTicket.Col, Valid: true},
@@ -187,6 +187,11 @@ func (in OrderEvent) AssignTicketColHandler(ctx context.Context, msg []byte) err
 	if err != nil {
 		slog.ErrorContext(ctx, "failed to update order ticket row col", traceIdAttr, slog.Any(constant.LogFieldErr, err))
 		return err
+	}
+
+	if cmd.RowsAffected() == 0 {
+		slog.ErrorContext(ctx, "order ticket row col is not updated", traceIdAttr)
+		return fmt.Errorf("order ticket row col is not updated")
 	}
 
 	err = tx.Commit(ctx)

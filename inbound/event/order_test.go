@@ -168,8 +168,8 @@ func (s *OrderEventTestSuite) TestComplete() {
 				ExternalId: "order-123",
 			},
 			setupMock: func(msg []byte) {
-				rows := pgxmock.NewRows([]string{"id", "category_id", "external_id", "name", "email", "phone", "payment_code", "expired_at"})
-				rows.AddRow(int32(1), int16(1), "order-123", "John Doe", "john@example.com", "1234567890", "PAY123", fixedTime)
+				rows := pgxmock.NewRows([]string{"id", "category_id", "external_id", "name", "email", "payment_code", "expired_at"})
+				rows.AddRow(int32(1), int16(1), "order-123", "John Doe", "john@example.com", "PAY123", fixedTime)
 
 				s.PgxMock.ExpectQuery("SELECT (.+) FROM orders").
 					WithArgs("order-123").
@@ -187,8 +187,8 @@ func (s *OrderEventTestSuite) TestComplete() {
 				ExternalId: "order-123",
 			},
 			setupMock: func(msg []byte) {
-				rows := pgxmock.NewRows([]string{"id", "category_id", "external_id", "name", "email", "phone", "payment_code", "expired_at"})
-				rows.AddRow(int32(1), int16(1), "order-123", "John Doe", "john@example.com", "1234567890", "PAY123", fixedTime)
+				rows := pgxmock.NewRows([]string{"id", "category_id", "external_id", "name", "email", "payment_code", "expired_at"})
+				rows.AddRow(int32(1), int16(1), "order-123", "John Doe", "john@example.com", "PAY123", fixedTime)
 
 				s.PgxMock.ExpectQuery("SELECT (.+) FROM orders").
 					WithArgs("order-123").
@@ -206,8 +206,8 @@ func (s *OrderEventTestSuite) TestComplete() {
 				ExternalId: "order-123",
 			},
 			setupMock: func(msg []byte) {
-				rows := pgxmock.NewRows([]string{"id", "category_id", "external_id", "name", "email", "phone", "payment_code", "expired_at"})
-				rows.AddRow(int32(1), int16(1), "order-123", "John Doe", "john@example.com", "1234567890", "PAY123", fixedTime)
+				rows := pgxmock.NewRows([]string{"id", "category_id", "external_id", "name", "email", "payment_code", "expired_at"})
+				rows.AddRow(int32(1), int16(1), "order-123", "John Doe", "john@example.com", "PAY123", fixedTime)
 
 				s.PgxMock.ExpectQuery("SELECT (.+) FROM orders").
 					WithArgs("order-123").
@@ -231,8 +231,8 @@ func (s *OrderEventTestSuite) TestComplete() {
 				ExternalId: "order-123",
 			},
 			setupMock: func(msg []byte) {
-				rows := pgxmock.NewRows([]string{"id", "category_id", "external_id", "name", "email", "phone", "payment_code", "expired_at"})
-				rows.AddRow(int32(1), int16(1), "order-123", "John Doe", "john@example.com", "1234567890", "PAY123", fixedTime)
+				rows := pgxmock.NewRows([]string{"id", "category_id", "external_id", "name", "email", "payment_code", "expired_at"})
+				rows.AddRow(int32(1), int16(1), "order-123", "John Doe", "john@example.com", "PAY123", fixedTime)
 
 				s.PgxMock.ExpectQuery("SELECT (.+) FROM orders").
 					WithArgs("order-123").
@@ -329,7 +329,7 @@ func (s *OrderEventTestSuite) TestAssignTicketCol() {
 					WillReturnRows(rows)
 				s.PgxMock.ExpectRollback().WillReturnError(nil)
 			},
-			expectError: false,
+			expectError: true,
 		},
 		{
 			name: "category quantity col is negative",
@@ -348,7 +348,7 @@ func (s *OrderEventTestSuite) TestAssignTicketCol() {
 					WillReturnRows(rows)
 				s.PgxMock.ExpectRollback().WillReturnError(nil)
 			},
-			expectError: false,
+			expectError: true,
 		},
 		{
 			name: "update order ticket row col error",

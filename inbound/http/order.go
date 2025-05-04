@@ -12,7 +12,6 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/nats-io/nats.go/jetstream"
-	"github.com/nyaruka/phonenumbers"
 	"github.com/oklog/ulid/v2"
 	"github.com/redis/go-redis/v9"
 	"github.com/spf13/viper"
@@ -157,7 +156,6 @@ func (in OrderHttp) create(w http.ResponseWriter, r *http.Request) {
 		ExternalID:  externalId,
 		Name:        req.Name,
 		Email:       req.Email,
-		Phone:       req.Phone,
 		PaymentCode: vaCode,
 		ExpiredAt:   pgtype.Timestamp{Time: expiredAt, Valid: true},
 	})
@@ -173,7 +171,6 @@ func (in OrderHttp) create(w http.ResponseWriter, r *http.Request) {
 		ExternalID:  externalId,
 		Name:        req.Name,
 		Email:       req.Email,
-		Phone:       req.Phone,
 		PaymentCode: vaCode,
 		ExpiredAt:   expiredAt.Format(time.RFC3339),
 	})
@@ -199,7 +196,10 @@ func (in OrderHttp) cancel(w http.ResponseWriter, r *http.Request) {
 	traceIdAttr := common.ExtractTraceIDFromCtx(ctx)
 	slog.InfoContext(ctx, "cancel order receive request", traceIdAttr)
 
-	cancelableOrders, err := in.Querier.BulkCancelOrders(ctx, in.sizeBulkCancel)
+	cancelableOrders, err := in.Querier.BulkCancelOrders(ctx, sqlgen.BulkCancelOrdersParams{
+		Limit:     in.sizeBulkCancel,
+		UpdatedAt: pgtype.Timestamp{Time: in.TimeNow(), Valid: true},
+	})
 	if err != nil {
 		slog.ErrorContext(ctx, "failed to find cancelable orders", traceIdAttr, slog.Any(constant.LogFieldErr, err))
 		writeErrorResponse(w, err)
@@ -274,17 +274,6 @@ func (in OrderHttp) validateCreateOrderRequest(req model.CreateOrderRequest) err
 			Message: "Validation failed",
 			Data: map[string]any{
 				"CategoryId": "not found",
-			},
-		}
-	}
-
-	parsePhoneNumber, err := phonenumbers.Parse(req.Phone, "ID")
-	if err != nil || !phonenumbers.IsValidNumber(parsePhoneNumber) {
-		return &errs.HttpError{
-			Code:    http.StatusBadRequest,
-			Message: "Validation failed",
-			Data: map[string]any{
-				"Phone": "not valid",
 			},
 		}
 	}

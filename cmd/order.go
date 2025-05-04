@@ -10,39 +10,10 @@ import (
 	"golang.org/x/text/message"
 	"log"
 	"log/slog"
-	"os"
-	"runtime/pprof"
-	"time"
 )
 
 func runQueueOrderCmd(ctx context.Context) {
 	cfg := newCfg("env")
-
-	if cfg.GetString("env") == "dev" {
-		cpu, err := os.Create("order-cpu.prof")
-		if err != nil {
-			log.Fatalf("could not create CPU profile: %v", err)
-		}
-		defer cpu.Close()
-
-		err = pprof.StartCPUProfile(cpu)
-		if err != nil {
-			log.Fatalf("could not start CPU profile: %v", err)
-		}
-		defer pprof.StopCPUProfile()
-
-		mem, err := os.Create("order-mem.prof")
-		if err != nil {
-			log.Fatalf("could not create memory profile: %v", err)
-		}
-		defer mem.Close()
-
-		err = pprof.WriteHeapProfile(mem)
-		if err != nil {
-			log.Fatalf("could not write memory profile: %v", err)
-		}
-		defer mem.Close()
-	}
 
 	db := newDb(cfg)
 	defer db.Close()
@@ -81,7 +52,7 @@ func runQueueOrderCmd(ctx context.Context) {
 		log.Fatalln("failed to create consumer", err)
 	}
 
-	iter, err := cons.Messages()
+	iter, err := cons.Messages(jetstream.PullMaxMessages(cfg.GetInt("queue.order.batch_size")), jetstream.PullExpiry(cfg.GetDuration("queue.order.batch_wait")))
 	if err != nil {
 		panic(err)
 	}
@@ -108,12 +79,10 @@ func runQueueOrderCmd(ctx context.Context) {
 					eventErr = orderEvent.CreateHandler(ctx, msg.Data())
 				case constant.SubjectCallbackPayment:
 					eventErr = orderEvent.CompleteHandler(ctx, msg.Data())
-				case constant.SubjectAssignOrderTicketRowCol:
-					eventErr = orderEvent.AssignTicketColHandler(ctx, msg.Data())
 				}
 
 				if eventErr != nil {
-					msg.NakWithDelay(1 * time.Second)
+					msg.Nak()
 					continue
 				}
 

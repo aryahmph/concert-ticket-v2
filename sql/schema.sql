@@ -1,3 +1,5 @@
+SET TIME ZONE 'Asia/Jakarta';
+
 CREATE TABLE IF NOT EXISTS categories
 (
     id       SMALLINT PRIMARY KEY,
@@ -25,7 +27,6 @@ CREATE TABLE IF NOT EXISTS orders
     external_id  VARCHAR(36)  NOT NULL,
     name         VARCHAR(100) NOT NULL,
     email        VARCHAR(255) NOT NULL,
-    phone        VARCHAR(50)  NOT NULL,
     status       order_status DEFAULT 'pending',
     payment_code VARCHAR(50)  NOT NULL,
     expired_at   TIMESTAMP    NOT NULL,

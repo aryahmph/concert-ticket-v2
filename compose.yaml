@@ -5,20 +5,20 @@ services:
       POSTGRES_USER: user
       POSTGRES_PASSWORD: password
       POSTGRES_DB: dbname
+      TZ: Asia/Jakarta
     ports:
       - "5432:5432"
     volumes:
       - postgres-data:/var/lib/postgresql/data
       - ./sql:/docker-entrypoint-initdb.d
 
-  dragonfly:
-    image: 'docker.dragonflydb.io/dragonflydb/dragonfly'
-    ulimits:
-      memlock: -1
+  valkey:
+    image: valkey/valkey:8-alpine
+    container_name: valkey
     ports:
       - "6379:6379"
     volumes:
-      - dragonfly-data:/data
+      - valkey-data:/data
 
   nats:
     image: nats:2.11-alpine
@@ -32,13 +32,26 @@ services:
     volumes:
       - nats-data:/data
 
-  mailhog: #  For testing only
-    image: mailhog/mailhog:latest
+#  mailhog: #  For testing only
+#    image: mailhog/mailhog:latest
+#    ports:
+#      - "8025:8025"
+#      - "1025:1025"
+
+  jaeger:
+    image: jaegertracing/all-in-one:1.60
     ports:
-      - "8025:8025"
-      - "1025:1025"
+      - "16686:16686"
+
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:0.123.0
+    command: [ "--config=/etc/otel-collector.yaml" ]
+    volumes:
+      - ./otel-collector.yaml:/etc/otel-collector.yaml
+    ports:
+      - "4317:4317"
 
 volumes:
   postgres-data:
-  dragonfly-data:
   nats-data:
+  valkey-data:

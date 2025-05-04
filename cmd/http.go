@@ -12,39 +12,11 @@ import (
 	"log"
 	"log/slog"
 	"net/http"
-	"os"
-	"runtime/pprof"
 	"time"
 )
 
 func runHttpServerCmd(ctx context.Context) {
 	cfg := newCfg("env")
-
-	if cfg.GetString("env") == "dev" {
-		cpu, err := os.Create("http-cpu.prof")
-		if err != nil {
-			log.Fatalf("could not create CPU profile: %v", err)
-		}
-		defer cpu.Close()
-
-		err = pprof.StartCPUProfile(cpu)
-		if err != nil {
-			log.Fatalf("could not start CPU profile: %v", err)
-		}
-		defer pprof.StopCPUProfile()
-
-		mem, err := os.Create("http-mem.prof")
-		if err != nil {
-			log.Fatalf("could not create memory profile: %v", err)
-		}
-		defer mem.Close()
-
-		err = pprof.WriteHeapProfile(mem)
-		if err != nil {
-			log.Fatalf("could not write memory profile: %v", err)
-		}
-		defer mem.Close()
-	}
 
 	validate := validator.New()
 

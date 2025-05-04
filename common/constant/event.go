@@ -14,6 +14,6 @@ const (
 	SubjectIncrementCategoryQuantity     = "events.category.increment_quantity"
 	SubjectBulkIncrementCategoryQuantity = "events.category.bulk_increment_quantity"
 	SubjectCallbackPayment               = "events.order.complete"
-	SubjectAssignOrderTicketRowCol       = "events.order.assign_ticket_row_col"
+	SubjectAssignOrderTicketRowCol       = "events.assign_ticket"
 	SubjectSendEmail                     = "events.email.send"
 )

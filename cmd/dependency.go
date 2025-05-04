@@ -107,7 +107,7 @@ func createStreamWorkQueue(ctx context.Context, js jetstream.JetStream) jetstrea
 		Name:      constant.QueueStreamName,
 		Retention: jetstream.WorkQueuePolicy,
 		Subjects:  []string{constant.AllWildcard},
-		MaxBytes:  5 * 1024 * 1024,
+		MaxBytes:  -1,
 	}
 
 	st, err := js.CreateOrUpdateStream(ctx, cfg)

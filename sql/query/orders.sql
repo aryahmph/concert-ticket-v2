@@ -1,6 +1,6 @@
 -- name: InsertOrder :one
-INSERT INTO orders(category_id, external_id, name, email, phone, payment_code, expired_at)
-VALUES ($1, $2, $3, $4, $5, $6, $7)
+INSERT INTO orders(category_id, external_id, name, email, payment_code, expired_at)
+VALUES ($1, $2, $3, $4, $5, $6)
 RETURNING id;
 
 -- name: FindOrderByEmailAndStatusPending :one
@@ -15,7 +15,6 @@ SELECT id,
        external_id,
        name,
        email,
-       phone,
        payment_code,
        expired_at
 FROM orders
@@ -39,10 +38,10 @@ WHERE id = $3
 -- name: BulkCancelOrders :many
 UPDATE orders
 SET status     = 'cancelled',
-    updated_at = NOW()
+    updated_at = $2
 WHERE id IN (SELECT id
              FROM orders
              WHERE status = 'pending'
-               AND expired_at < NOW()
+               AND expired_at < $2
              LIMIT $1)
 RETURNING id, category_id, name, email;

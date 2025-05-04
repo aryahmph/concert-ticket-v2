@@ -20,7 +20,7 @@ POST http://localhost:8080/api/payments/callback
 Content-Type: application/json
 
 {
-  "external_id": "01JS4ME2FV07JKZZDBJ2F66Z2D"
+  "external_id": "01JTAMN9XJ9WAH1S79P90S15VF"
 }
 
 ### Trigger Orders Cancel

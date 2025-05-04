@@ -10,40 +10,12 @@ import (
 	"github.com/nats-io/nats.go/jetstream"
 	"log"
 	"log/slog"
-	"os"
-	"runtime/pprof"
 	"sync"
 	"time"
 )
 
 func runQueueCategoryCmd(ctx context.Context) {
 	cfg := newCfg("env")
-
-	if cfg.GetString("env") == "dev" {
-		cpu, err := os.Create("category-cpu.prof")
-		if err != nil {
-			log.Fatalf("could not create CPU profile: %v", err)
-		}
-		defer cpu.Close()
-
-		err = pprof.StartCPUProfile(cpu)
-		if err != nil {
-			log.Fatalf("could not start CPU profile: %v", err)
-		}
-		defer pprof.StopCPUProfile()
-
-		mem, err := os.Create("category-mem.prof")
-		if err != nil {
-			log.Fatalf("could not create memory profile: %v", err)
-		}
-		defer mem.Close()
-
-		err = pprof.WriteHeapProfile(mem)
-		if err != nil {
-			log.Fatalf("could not write memory profile: %v", err)
-		}
-		defer mem.Close()
-	}
 
 	db := newDb(cfg)
 	defer db.Close()
@@ -121,7 +93,7 @@ func runQueueCategoryCmd(ctx context.Context) {
 				}
 
 				if eventErr != nil {
-					msg.NakWithDelay(1 * time.Second)
+					msg.Nak()
 					continue
 				}
 
@@ -189,7 +161,7 @@ func runQueueCategoryCmd(ctx context.Context) {
 				return false
 			}
 
-			slog.InfoContext(ctx, "Publishing batch", slog.Any("data", dataToSend))
+			slog.ErrorContext(ctx, "Publishing batch", slog.Any("data", dataToSend))
 
 			err := common.PublishMessage(ctx, js, constant.SubjectBulkIncrementCategoryQuantity, dataToSend)
 			if err != nil {
